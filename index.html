@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelCraftLab - Next Level Web Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* === SCROLL PROGRESS BAR === */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: var(--gradient-primary);
+            z-index: 9999;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .scroll-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6));
+            animation: progressGlow 2s ease-in-out infinite;
+        }
+
+        /* === PROGRESS ANIMATION === */
+        @keyframes progressGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        /* === ENTRANCE ANIMATION === */
+        .entrance-fade {
+            animation: entranceFade 0.8s ease forwards;
+        }
+
+        @keyframes entranceFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        :root {
+            --primary-blue: #2563eb;
+            --electric-blue: #0ea5e9;
+            --light-blue: #e0f2fe;
+            --dark-blue: #1e40af;
+            --white: #ffffff;
+            --light-gray: #f8fafc;
+            --medium-gray: #94a3b8; /* Adjusted for footer text */
+            --dark-gray: #1e293b;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --gradient-primary: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+            --gradient-light: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-light: #e2e8f0;
+        }
+
+        /* === GLOBAL STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--light-gray);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        #hero-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+        }
+        
+        /* === ANIMATED BLOB BACKGROUND === */
+        .background-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            z-index: -2; /* Behind particles */
+            filter: blur(60px);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.2);
+            animation: move 35s infinite alternate;
+        }
+
+        .blob:nth-child(1) {
+            width: 45vmax;
+            height: 45vmax;
+            top: -20%;
+            left: -10%;
+            animation-duration: 40s;
+        }
+
+        .blob:nth-child(2) {
+            width: 55vmax;
+            height: 55vmax;
+            bottom: -30%;
+            right: -20%;
+            animation-duration: 30s;
+            animation-delay: -8s;
+        }
+        
+        .blob:nth-child(3) {
+            width: 30vmax;
+            height: 30vmax;
+            top: 10%;
+            right: 10%;
+            animation-duration: 25s;
+            animation-delay: -15s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+            50% {
+                transform: translate(100px, 200px) rotate(180deg);
+                border-radius: 40% 60% 70% 30% / 40% 70% 30% 60%;
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* === HEADER & NAVIGATION === */
+        header {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.4s ease;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            animation: headerGlow 3s ease-in-out infinite alternate;
+        }
+
+        header.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            padding: 0 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .logo {
+            text-decoration: none;
+            position: relative;
+            z-index: 10;
+            justify-self: start;
+        }
+
+        .logo-icon {
+            width: 128px; 
+            height: 128px;
+            background: transparent;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
+        
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-text-container {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-172%); /* CORRECTED */
+            text-decoration: none;
+            text-align: center;
+            z-index: 5;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+            white-space: nowrap;
+        }
+        
+        .logo-highlight {
+            color: var(--primary-blue);
+        }
+
+        .logo-text .highlight {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-self: end;
+        }
+
+        .nav-container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-light);
+            border-radius: 50px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links li {
+            position: relative;
+        }
+
+        .nav-links a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .nav-links a.active, .nav-links a:hover {
+            color: var(--primary-blue);
+            transform: translateY(-1px);
+        }
+        
+        .nav-links a.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+        }
+
+        /* === LANGUAGE SWITCHER === */
+        .language-switcher {
+            display: flex;
+            background: var(--light-gray);
+            border-radius: 50px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-light);
+        }
+        .lang-btn {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        .lang-btn.active {
+            background: var(--white);
+            color: var(--primary-blue);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* Mobile Navigation */
+        @media (max-width: 900px) {
+            nav {
+                display: flex;
+                justify-content: space-between;
+                grid-template-columns: auto auto;
+            }
+            .logo-text-container {
+                 display: none; /* Hide centered text on mobile to avoid clutter */
+            }
+            .nav-wrapper {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 2rem;
+                right: 2rem;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(40px);
+                border-radius: 20px;
+                padding: 1rem;
+                margin-top: 1rem;
+                box-shadow: var(--card-shadow-hover);
+                border: 1px solid var(--border-light);
+                flex-direction: column;
+            }
+            .nav-wrapper.active {
+                display: flex;
+                animation: mobileNavSlide 0.3s ease;
+            }
+            .nav-container {
+                width: 100%;
+            }
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .nav-links a {
+                padding: 1rem 1.5rem;
+                text-align: center;
+            }
+            nav {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        @keyframes mobileNavSlide {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === MAIN CONTENT === */
+        main {
+            padding-top: 110px; /* Reduced further */
+        }
+
+        /* === PAGE NAVIGATION === */
+        main > section {
+            display: none; 
+        }
+        main > section.active {
+            display: block;
+            animation: pageFadeIn 0.6s ease-in-out;
+        }
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* === HERO SECTION (REDESIGNED) === */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 0 2rem;
+        }
+        
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+        .hero-content {
+            text-align: left;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, 
+                var(--text-primary) 0%, 
+                var(--primary-blue) 30%, 
+                var(--electric-blue) 60%,
+                var(--text-primary) 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+            animation: textShimmer 6s ease-in-out infinite;
+            letter-spacing: -0.025em;
+        }
+
+        .floating-word {
+            display: inline-block;
+            animation: wordFloat 4s ease-in-out infinite;
+        }
+
+        .floating-word:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .floating-word:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .hero-tagline {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .hero .subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.2rem);
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 0.025em;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        
+        .hero-animation-container {
+            width: 100%;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #shape-canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        @media (max-width: 900px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-content {
+                text-align: center;
+            }
+            .hero .subtitle {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .cta-group {
+                justify-content: center;
+            }
+            .hero-animation-container {
+                height: 300px;
+                margin-top: 2rem;
+            }
+        }
+
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1.25rem 1.75rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--card-shadow); /* CORRECTED */
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: var(--card-shadow);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--card-shadow-hover); /* CORRECTED */
+        }
+
+        .cta-secondary {
+            background: white;
+            color: var(--primary-blue);
+            border: 2px solid var(--border-light);
+            box-shadow: var(--card-shadow);
+        }
+
+        .cta-secondary:hover:not(:disabled) {
+            background: var(--light-gray);
+            border-color: var(--primary-blue);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        /* === CONTENT SECTIONS === */
+        .content-section {
+            padding: 6rem 0;
+            position: relative;
+            background: transparent; /* Make sections transparent */
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, 
+                var(--text-primary) 0%, 
+                var(--primary-blue) 50%,
+                var(--electric-blue) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            position: relative;
+            animation: titleShimmer 8s ease-in-out infinite;
+            letter-spacing: -0.025em;
+        }
+
+        .section-title-container {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title-container .section-title {
+             margin-bottom: 0;
+        }
+
+        .section-title-container .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--gradient-primary);
+            margin: 2rem auto 0;
+            border-radius: 2px;
+        }
+
+        /* === GLASS CARDS === */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        .glass-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--card-shadow-hover);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            color: var(--primary-blue);
+        }
+
+        .glass-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .glass-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        
+        /* === CONTACT FORM & PAGE LAYOUT === */
+        .contact-grid {
+            display: flex;
+            justify-content: center;
+            margin-top: 4rem;
+        }
+
+        .contact-form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--card-shadow-hover);
+            width: 100%;
+            max-width: 700px; /* Begrenzt die maximale Breite des Formulars */
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+            background: var(--light-gray);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* === FOOTER === */
+        footer {
+            background: var(--dark-gray);
+            color: var(--medium-gray);
+            padding: 5rem 0 0;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            padding-bottom: 4rem;
+            border-bottom: 1px solid #334155;
+        }
+        .footer-column h4 {
+            color: var(--white);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 30px;
+            height: 2px;
+            background: var(--primary-blue);
+        }
+        .footer-column p, .footer-column li {
+            margin-bottom: 0.75rem;
+        }
+        .footer-column ul {
+            list-style: none;
+        }
+        .footer-column a {
+            color: var(--medium-gray);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-column a:hover {
+            color: var(--white);
+        }
+        .footer-column .contact-info i {
+            width: 20px;
+            margin-right: 0.5rem;
+            color: var(--primary-blue);
+        }
+        .footer-bottom {
+            padding: 2rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 900px) {
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            footer {
+                text-align: center;
+            }
+            .footer-column h4::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        
+        /* === EXPANDED CONTENT STYLES === */
+        .home-section {
+            padding: 6rem 0;
+        }
+        .home-about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        .home-about-grid img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow-hover);
+        }
+        .home-about-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+        }
+        .gateway-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .gateway-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        .gateway-card h3 {
+            margin-bottom: 1rem;
+        }
+        .gateway-card p {
+            flex-grow: 1;
+            color: var(--text-secondary);
+        }
+        .gateway-card .cta-button {
+            margin-top: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 768px) {
+            .home-about-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .trusted-by {
+            padding: 4rem 0;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .trusted-by h3 {
+            text-align: center;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .logos-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            filter: grayscale(100%) opacity(0.6);
+        }
+        .logos-container i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+        }
+        .stats-section {
+            padding: 6rem 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+        .stat-item .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        .process-timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 4rem auto 0;
+        }
+        .process-timeline::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background: var(--border-light);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -2px;
+            border-radius: 2px;
+            z-index: 1;
+        }
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            z-index: 2; /* CORRECTED: Ensures item is above the timeline's ::after pseudo-element */
+        }
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 60px;
+            text-align: right;
+        }
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 60px;
+            text-align: left;
+        }
+        .timeline-content {
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-light);
+        }
+        .timeline-icon {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 0 0 8px var(--light-gray);
+        }
+        .timeline-item:nth-child(even) .timeline-icon {
+            left: -25px;
+        }
+        .timeline-content h3 {
+            margin-bottom: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .process-timeline::after {
+                left: 25px;
+            }
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-item:nth-child(odd), .timeline-item:nth-child(even) {
+                left: 0;
+                text-align: left;
+            }
+            .timeline-icon {
+                left: 0;
+            }
+        }
+
+        /* === PORTFOLIO PAGE STYLES === */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        .portfolio-item {
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s ease;
+        }
+        .portfolio-item:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        .portfolio-image img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+        .portfolio-content {
+            padding: 1.5rem;
+        }
+        .portfolio-content h3 {
+            margin-bottom: 0.5rem;
+        }
+        .portfolio-tags {
+            margin-bottom: 1rem;
+        }
+        .portfolio-tags .tag {
+            display: inline-block;
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .portfolio-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+
+        /* === ALL ANIMATIONS === */
+        @keyframes headerGlow {
+            from { box-shadow: 0 0 5px rgba(37, 99, 235, 0.2); }
+            to { box-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
+        }
+        @keyframes logoShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        @keyframes heroGlow {
+            from { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            to { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+        @keyframes textShimmer {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @keyframes titleShimmer {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @keyframes wordFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; translateY(0); }
+        }
+        @keyframes codeFloat {
+             0%, 100% { transform: translateY(0); }
+             50% { transform: translateY(-15px); }
+        }
+        @keyframes cubeRotate {
+            from { transform: rotateX(0) rotateY(0); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="hero-canvas"></canvas>
+    <div class="background-blobs">
+        <div class="blob"></div>
+        <div class="blob"></div>
+        <div class="blob"></div>
+    </div>
+
+    <div class="scroll-progress"></div>
+
+    <header>
+        <nav>
+            <a href="#home" class="logo">
+                <div class="logo-icon">
+                    <img src="https://raw.githubusercontent.com/Leon0x00x0/bild0x0/9d60249824175448dbc4896c82206cfab5bcce7d/Webdesign%20und%20Entwicklung%20Icon-Photoroom.png" alt="PixelCraftLab Logo">
+                </div>
+            </a>
+            <a href="#home" class="logo-text-container">
+                <span class="logo-text"><span class="logo-highlight">P</span>ixel<span class="logo-highlight">C</span>raft<span class="logo-highlight">L</span>ab</span>
+            </a>
+            <div class="nav-wrapper">
+                <div class="nav-container">
+                    <ul class="nav-links">
+                        <li><a href="#home" data-key="navHome">Home</a></li>
+                        <li><a href="#services" data-key="navServices">Services</a></li>
+                        <li><a href="#process" data-key="navProcess">My Process</a></li>
+                        <li><a href="#portfolio" data-key="navPortfolio">Portfolio</a></li>
+                        <li><a href="#contact" data-key="navContact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="language-switcher">
+                    <button class="lang-btn" data-lang="de">DE</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HOME PAGE -->
+        <section id="home">
+            <div class="hero">
+                <div class="container hero-container">
+                    <div class="hero-content entrance-fade">
+                        <h1 data-key="heroTitle">
+                            <span class="floating-word">Build.</span>
+                            <span class="floating-word">Innovate.</span>
+                            <span class="floating-word">Inspire.</span>
+                        </h1>
+                        <h2 class="hero-tagline" data-key="heroTagline">Welcome to PixelCraftLab</h2>
+                        <p class="subtitle" data-key="heroSubtitle">I craft cutting-edge digital experiences that elevate your brand and engage your audience. Welcome to the next level of web development.</p>
+                        <div class="cta-group">
+                            <a href="#services" class="cta-button" data-key="heroCtaPrimary">My Services <i class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i></a>
+                            <a href="#contact" class="cta-button cta-secondary" data-key="heroCtaSecondary">Get in Touch</a>
+                        </div>
+                    </div>
+                    <div class="hero-animation-container">
+                        <canvas id="shape-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="home-section">
+                <div class="container">
+                    <div class="home-about-grid">
+                        <div class="home-about-content entrance-fade">
+                            <h2 data-key="homeAboutTitle">From Vision to Reality, Digitally Crafted.</h2>
+                            <p data-key="homeAboutText" class="text-secondary">Von der Vision zur Realität – in Ihrem Tempo. PixelCraftLab aus Ludwigsburg ist Ihr Partner für professionelle Webentwicklung. Ich verstehe, dass jedes Projekt einzigartig ist. Benötigen Sie eine schnelle und schlagkräftige Online-Präsenz? Ihre neue Webseite kann in nur 72 Stunden online sein. Für komplexere Vorhaben biete ich einen detaillierten, kollaborativen Prozess, bei dem wir gemeinsam jeden Schritt gestalten. Egal welchen Weg Sie wählen, ich kombiniere modernes Design mit robuster Technik für eine leistungsstarke und zuverlässige Web-Lösung.</p>
+                            <div class="cta-group" style="margin-top: 2rem;">
+                                <a href="#portfolio" class="cta-button" data-key="viewOurWork">View My Work</a>
+                                <a href="#contact" class="cta-button cta-secondary" data-key="heroCtaSecondary">Get in Touch</a>
+                            </div>
+                        </div>
+                        <div class="home-about-image entrance-fade">
+                            <img src="https://i.imgur.com/Rcia0ZM.png" alt="PixelCraftLab Design-Element">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-section" style="padding-top: 0;">
+                <div class="container">
+                    <div class="card-grid" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+                        <div class="glass-card entrance-fade">
+                            <i class="card-icon fa-solid fa-lock"></i>
+                            <h3 data-key="featureSecurityTitle">Sicherheit: SSL-Zertifikate</h3>
+                            <p data-key="featureSecurityText">Jede Webseite wird mit einem SSL-Zertifikat ausgestattet. Das verschlüsselt die Daten, schützt Besucherinformationen und schafft Vertrauen.</p>
+                        </div>
+                        <div class="glass-card entrance-fade" style="animation-delay: 0.1s;">
+                            <i class="card-icon fa-solid fa-chart-line"></i>
+                            <h3 data-key="featureAnalyticsTitle">Erfolg messen: Website Analytics</h3>
+                            <p data-key="featureAnalyticsText">Ich richte Analyse-Tools ein, damit Sie verstehen, wer Ihre Besucher sind und welche Inhalte am besten ankommen, um Ihre Seite stetig zu verbessern.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-section">
+                <div class="container">
+                     <div class="card-grid">
+                        <div class="gateway-card entrance-fade">
+                            <h3 data-key="homeGatewayServicesTitle">My Services</h3>
+                            <p data-key="homeGatewayServicesText">Explore my comprehensive range of services, from UI/UX design to full-stack development and cloud solutions.</p>
+                            <a href="#services" class="cta-button" data-key="learnMore">Learn More</a>
+                        </div>
+                         <div class="gateway-card entrance-fade" style="animation-delay: 0.1s;">
+                            <h3 data-key="homeGatewayProcessTitle">My Process</h3>
+                            <p data-key="homeGatewayProcessText">Discover my step-by-step process that ensures quality, transparency, and success for every project I undertake.</p>
+                            <a href="#process" class="cta-button" data-key="learnMore">Learn More</a>
+                        </div>
+                         <div class="gateway-card entrance-fade" style="animation-delay: 0.2s;">
+                            <h3 data-key="homeGatewayPortfolioTitle">My Portfolio</h3>
+                            <p data-key="homeGatewayPortfolioText">See my work in action. Browse a selection of my recent projects and see how I've helped clients achieve their goals.</p>
+                            <a href="#portfolio" class="cta-button" data-key="learnMore">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SERVICES PAGE -->
+        <section id="services" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title" data-key="servicesTitle">My Services</h2>
+                </div>
+                <div class="card-grid">
+                    <div class="glass-card entrance-fade">
+                        <i class="card-icon fa-solid fa-palette"></i>
+                        <h3 data-key="service1Title">UI/UX Design</h3>
+                        <p data-key="service1Desc">Creating intuitive, beautiful, and user-centric designs that provide a seamless digital experience and drive engagement.</p>
+                    </div>
+                    <div class="glass-card entrance-fade" style="animation-delay: 0.1s;">
+                        <i class="card-icon fa-solid fa-laptop-code"></i>
+                        <h3 data-key="service2Title">Web Development</h3>
+                        <p data-key="service2Desc">Building robust, scalable, and high-performance websites and applications using the latest technologies and frameworks.</p>
+                    </div>
+                    <div class="glass-card entrance-fade" style="animation-delay: 0.2s;">
+                        <i class="card-icon fa-solid fa-rocket"></i>
+                        <h3 data-key="service3Title">SEO & Performance</h3>
+                        <p data-key="service3Desc">Optimizing your digital presence for search engines and ensuring lightning-fast load times for a superior user experience.</p>
+                    </div>
+                    <div class="glass-card entrance-fade" style="animation-delay: 0.3s;">
+                        <i class="card-icon fa-solid fa-shield-halved"></i>
+                        <h3 data-key="service4Title">Full-Service Management</h3>
+                        <p data-key="service4Desc">I take the stress and time commitment of creating and maintaining a website off your hands, so you can fully concentrate on your core business.</p>
+                    </div>
+                    <div class="glass-card entrance-fade" style="animation-delay: 0.4s;">
+                        <i class="card-icon fa-solid fa-cloud"></i>
+                        <h3 data-key="service5Title">Cloud & DevOps</h3>
+                        <p data-key="service5Desc">Automating deployment and scaling your infrastructure on the cloud for maximum reliability and efficiency.</p>
+                    </div>
+                    <div class="glass-card entrance-fade" style="animation-delay: 0.5s;">
+                        <i class="card-icon fa-solid fa-headset"></i>
+                        <h3 data-key="service6Title">Ongoing Support</h3>
+                        <p data-key="service6Desc">Providing continuous maintenance, updates, and support to ensure your digital assets remain secure and up-to-date.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROCESS PAGE -->
+        <section id="process" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title" data-key="processTitle">My Process</h2>
+                </div>
+                <div class="process-timeline">
+                    <div class="timeline-item entrance-fade">
+                        <div class="timeline-icon"><i class="fa-solid fa-search"></i></div>
+                        <div class="timeline-content">
+                            <h3 data-key="process1Title">1. Discovery & Strategy</h3>
+                            <p data-key="process1Desc">I start by understanding your business goals, target audience, and project requirements to build a solid strategic foundation.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item entrance-fade">
+                        <div class="timeline-icon"><i class="fa-solid fa-drafting-compass"></i></div>
+                        <div class="timeline-content">
+                            <h3 data-key="process2Title">2. Design & Prototyping</h3>
+                            <p data-key="process2Desc">I create wireframes and high-fidelity mockups, focusing on user experience and visual design to bring your vision to life.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item entrance-fade">
+                        <div class="timeline-icon"><i class="fa-solid fa-code"></i></div>
+                        <div class="timeline-content">
+                            <h3 data-key="process3Title">3. Development</h3>
+                            <p data-key="process3Desc">Using clean, efficient code, I build a fast, responsive, and scalable product based on the approved designs.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item entrance-fade">
+                        <div class="timeline-icon"><i class="fa-solid fa-rocket"></i></div>
+                        <div class="timeline-content">
+                            <h3 data-key="process4Title">4. Deployment & Launch</h3>
+                            <p data-key="process4Desc">After rigorous testing, I deploy the project to a live server and monitor its performance to ensure a smooth launch.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- PORTFOLIO PAGE -->
+        <section id="portfolio" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title" data-key="portfolioTitle">My Work</h2>
+                </div>
+                
+                <div class="portfolio-grid">
+                    <!-- Item 1 -->
+                    <div class="portfolio-item entrance-fade">
+                        <div class="portfolio-image">
+                            <img src="https://placehold.co/600x400/e0f2fe/1e293b?text=Project+Placeholder" alt="Project Placeholder">
+                        </div>
+                        <div class="portfolio-content">
+                            <h3 data-key="portfolio1Title">Corporate Website Redesign</h3>
+                            <div class="portfolio-tags">
+                                <span class="tag" data-key="tagWebDev">Web Development</span>
+                                <span class="tag" data-key="tagUIUX">UI/UX</span>
+                            </div>
+                            <p data-key="portfolio1Desc">A complete overhaul of a major tech company's website, focusing on a modern user experience and performance.</p>
+                            <a href="#" class="cta-button cta-secondary" data-key="viewProject">View Project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT PAGE -->
+        <section id="contact" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title" data-key="contactTitle">Get in Touch</h2>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-form entrance-fade">
+                        <form action="https://formspree.io/f/xeozbvwz" method="POST">
+                            <div class="form-group">
+                                <label for="email" data-key="formEmail">Your Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message" data-key="formMessage">Your Message</label>
+                                <textarea id="message" name="message" required></textarea>
+                            </div>
+                            <button type="submit" class="cta-button" style="width: 100%;" data-key="formButton">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- IMPRESSUM PAGE -->
+        <section id="impressum" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title">Impressum</h2>
+                </div>
+                <div class="glass-card" style="text-align: left;">
+                    <p>Leon Oberscheven<br />
+                    Caerphillystr. 36/2<br />
+                    71638 Ludwigsburg</p>
+                    
+                    <h3>Kontakt</h3>
+                    <p>Telefon: 017676661597<br />
+                    E-Mail: info.pixelcraftlab@gmail.com</p>
+                    
+                    <p>Quelle: <a href="https://www.e-recht24.de">e-recht24.de</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATENSCHUTZ PAGE -->
+        <section id="datenschutz" class="content-section">
+            <div class="container">
+                <div class="section-title-container">
+                    <h2 class="section-title">Datenschutzerklärung</h2>
+                </div>
+                <div class="glass-card" style="text-align: left;">
+                    <h2>1. Datenschutz auf einen Blick</h2>
+                    <h3>Allgemeine Hinweise</h3>
+                    <p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können. Ausführliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem Text aufgeführten Datenschutzerklärung.</p>
+                    <h3>Datenerfassung auf dieser Website</h3>
+                    <h4>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</h4>
+                    <p>Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Abschnitt „Hinweis zur Verantwortlichen Stelle“ in dieser Datenschutzerklärung entnehmen.</p>
+                    <h4>Wie erfassen wir Ihre Daten?</h4>
+                    <p>Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen. Hierbei kann es sich z. B. um Daten handeln, die Sie in ein Kontaktformular eingeben.</p>
+                    <p>Andere Daten werden automatisch oder nach Ihrer Einwilligung beim Besuch der Website durch unsere IT-Systeme erfasst. Das sind vor allem technische Daten (z. B. Internetbrowser, Betriebssystem oder Uhrzeit des Seitenaufrufs). Die Erfassung dieser Daten erfolgt automatisch, sobald Sie diese Website betreten.</p>
+                    <h4>Wofür nutzen wir Ihre Daten?</h4>
+                    <p>Ein Teil der Daten wird erhoben, um eine fehlerfreie Bereitstellung der Website zu gewährleisten. Andere Daten können zur Analyse Ihres Nutzerverhaltens verwendet werden. Sofern über die Website Verträge geschlossen oder angebahnt werden können, werden die übermittelten Daten auch für Vertragsangebote, Bestellungen oder sonstige Auftragsanfragen verarbeitet.</p>
+                    <h4>Welche Rechte haben Sie bezüglich Ihrer Daten?</h4>
+                    <p>Sie haben jederzeit das Recht, unentgeltlich Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten personenbezogenen Daten zu erhalten. Sie haben außerdem ein Recht, die Berichtigung oder Löschung dieser Daten zu verlangen. Wenn Sie eine Einwilligung zur Datenverarbeitung erteilt haben, können Sie diese Einwilligung jederzeit für die Zukunft widerrufen. Außerdem haben Sie das Recht, unter bestimmten Umständen die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Des Weiteren steht Ihnen ein Beschwerderecht bei der zuständigen Aufsichtsbehörde zu.</p>
+                    <p>Hierzu sowie zu weiteren Fragen zum Thema Datenschutz können Sie sich jederzeit an uns wenden.</p>
+                    <h3>Analyse-Tools und Tools von Drittanbietern</h3>
+                    <p>Beim Besuch dieser Website kann Ihr Surf-Verhalten statistisch ausgewertet werden. Das geschieht vor allem mit sogenannten Analyseprogrammen.</p>
+                    <p>Detaillierte Informationen zu diesen Analyseprogrammen finden Sie in der folgenden Datenschutzerklärung.</p>
+                    <h2>2. Hosting</h2>
+                    <p>Wir hosten die Inhalte unserer Website bei folgendem Anbieter:</p>
+                    <h3>Externes Hosting</h3>
+                    <p>Diese Website wird extern gehostet. Die personenbezogenen Daten, die auf dieser Website erfasst werden, werden auf den Servern des Hosters / der Hoster gespeichert. Hierbei kann es sich v. a. um IP-Adressen, Kontaktanfragen, Meta- und Kommunikationsdaten, Vertragsdaten, Kontaktdaten, Namen, Websitezugriffe und sonstige Daten, die über eine Website generiert werden, handeln.</p>
+                    <p>Das externe Hosting erfolgt zum Zwecke der Vertragserfüllung gegenüber unseren potenziellen und bestehenden Kunden (Art. 6 Abs. 1 lit. b DSGVO) und im Interesse einer sicheren, schnellen und effizienten Bereitstellung unseres Online-Angebots durch einen professionellen Anbieter (Art. 6 Abs. 1 lit. f DSGVO). Sofern eine entsprechende Einwilligung abgefragt wurde, erfolgt die Verarbeitung ausschließlich auf Grundlage von Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG, soweit die Einwilligung die Speicherung von Cookies oder den Zugriff auf Informationen im Endgerät des Nutzers (z. B. Device-Fingerprinting) im Sinne des TDDDG umfasst. Die Einwilligung ist jederzeit widerrufbar.</p>
+                    <p>Unser(e) Hoster wird bzw. werden Ihre Daten nur insoweit verarbeiten, wie dies zur Erfüllung seiner Leistungspflichten erforderlich ist und unsere Weisungen in Bezug auf diese Daten befolgen.</p>
+                    <p>Wir setzen folgende(n) Hoster ein:</p>
+                    <p>vercel</p>
+                    <h2>3. Allgemeine Hinweise und Pflichtinformationen</h2>
+                    <h3>Datenschutz</h3>
+                    <p>Die Betreiber dieser Seiten nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend den gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.</p>
+                    <p>Wenn Sie diese Website benutzen, werden verschiedene personenbezogene Daten erhoben. Personenbezogene Daten sind Daten, mit denen Sie persönlich identifiziert werden können. Die vorliegende Datenschutzerklärung erläutert, welche Daten wir erheben und wofür wir sie nutzen. Sie erläutert auch, wie und zu welchem Zweck das geschieht.</p>
+                    <p>Wir weisen darauf hin, dass die Datenübertragung im Internet (z. B. bei der Kommunikation per E-Mail) Sicherheitslücken aufweisen kann. Ein lückenloser Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich.</p>
+                    <h3>Hinweis zur verantwortlichen Stelle</h3>
+                    <p>Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:</p>
+                    <p>Herr Leon Oberscheven<br>Telefon: 017676661597<br>E-Mail: info.pixelcraftlab@gmail.com</p>
+                    <p>Verantwortliche Stelle ist die natürliche oder juristische Person, die allein oder gemeinsam mit anderen über die Zwecke und Mittel der Verarbeitung von personenbezogenen Daten (z. B. Namen, E-Mail-Adressen o. Ä.) entscheidet.</p>
+                    <h3>Speicherdauer</h3>
+                    <p>Soweit innerhalb dieser Datenschutzerklärung keine speziellere Speicherdauer genannt wurde, verbleiben Ihre personenbezogenen Daten bei uns, bis der Zweck für die Datenverarbeitung entfällt. Wenn Sie ein berechtigtes Löschersuchen geltend machen oder eine Einwilligung zur Datenverarbeitung widerrufen, werden Ihre Daten gelöscht, sofern wir keine anderen rechtlich zulässigen Gründe für die Speicherung Ihrer personenbezogenen Daten haben (z. B. steuer- oder handelsrechtliche Aufbewahrungsfristen); im letztgenannten Fall erfolgt die Löschung nach Fortfall dieser Gründe.</p>
+                    <h3>Allgemeine Hinweise zu den Rechtsgrundlagen der Datenverarbeitung auf dieser Website</h3>
+                    <p>Sofern Sie in die Datenverarbeitung eingewilligt haben, verarbeiten wir Ihre personenbezogenen Daten auf Grundlage von Art. 6 Abs. 1 lit. a DSGVO bzw. Art. 9 Abs. 2 lit. a DSGVO, sofern besondere Datenkategorien nach Art. 9 Abs. 1 DSGVO verarbeitet werden. Im Falle einer ausdrücklichen Einwilligung in die Übertragung personenbezogener Daten in Drittstaaten erfolgt die Datenverarbeitung außerdem auf Grundlage von Art. 49 Abs. 1 lit. a DSGVO. Sofern Sie in die Speicherung von Cookies oder in den Zugriff auf Informationen in Ihr Endgerät (z. B. via Device-Fingerprinting) eingewilligt haben, erfolgt die Datenverarbeitung zusätzlich auf Grundlage von § 25 Abs. 1 TDDDG. Die Einwilligung ist jederzeit widerrufbar. Sind Ihre Daten zur Vertragserfüllung oder zur Durchführung vorvertraglicher Maßnahmen erforderlich, verarbeiten wir Ihre Daten auf Grundlage des Art. 6 Abs. 1 lit. b DSGVO. Des Weiteren verarbeiten wir Ihre Daten, sofern diese zur Erfüllung einer rechtlichen Verpflichtung erforderlich sind auf Grundlage von Art. 6 Abs. 1 lit. c DSGVO. Die Datenverarbeitung kann ferner auf Grundlage unseres berechtigten Interesses nach Art. 6 Abs. 1 lit. f DSGVO erfolgen. Über die jeweils im Einzelfall einschlägigen Rechtsgrundlagen wird in den folgenden Absätzen dieser Datenschutzerklärung informiert.</p>
+                    <h3>Empfänger von personenbezogenen Daten</h3>
+                    <p>Im Rahmen unserer Geschäftstätigkeit arbeiten wir mit verschiedenen externen Stellen zusammen. Dabei ist teilweise auch eine Übermittlung von personenbezogener Daten an diese externen Stellen erforderlich. Wir geben personenbezogene Daten nur dann an externe Stellen weiter, wenn dies im Rahmen einer Vertragserfüllung erforderlich ist, wenn wir gesetzlich hierzu verpflichtet sind (z. B. Weitergabe von Daten an Steuerbehörden), wenn wir ein berechtigtes Interesse nach Art. 6 Abs. 1 lit. f DSGVO an der Weitergabe haben oder wenn eine sonstige Rechtsgrundlage die Datenweitergabe erlaubt. Beim Einsatz von Auftragsverarbeitern geben wir personenbezogene Daten unserer Kunden nur auf Grundlage eines gültigen Vertrags über Auftragsverarbeitung weiter. Im Falle einer gemeinsamen Verarbeitung wird ein Vertrag über gemeinsame Verarbeitung geschlossen.</p>
+                    <h3>Widerruf Ihrer Einwilligung zur Datenverarbeitung</h3>
+                    <p>Viele Datenverarbeitungsvorgänge sind nur mit Ihrer ausdrücklichen Einwilligung möglich. Sie können eine bereits erteilte Einwilligung jederzeit widerrufen. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Datenverarbeitung bleibt vom Widerruf unberührt.</p>
+                    <h3>Widerspruchsrecht gegen die Datenerhebung in besonderen Fällen sowie gegen Direktwerbung (Art. 21 DSGVO)</h3>
+                    <p>WENN DIE DATENVERARBEITUNG AUF GRUNDLAGE VON ART. 6 ABS. 1 LIT. E ODER F DSGVO ERFOLGT, HABEN SIE JEDERZEIT DAS RECHT, AUS GRÜNDEN, DIE SICH AUS IHRER BESONDEREN SITUATION ERGEBEN, GEGEN DIE VERARBEITUNG IHRER PERSONENBEZOGENEN DATEN WIDERSPRUCH EINZULEGEN; DIES GILT AUCH FÜR EIN AUF DIESE BESTIMMUNGEN GESTÜTZTES PROFILING. DIE JEWEILIGE RECHTSGRUNDLAGE, AUF DENEN EINE VERARBEITUNG BERUHT, ENTNEHMEN SIE DIESER DATENSCHUTZERKLÄRUNG. WENN SIE WIDERSPRUCH EINLEGEN, WERDEN WIR IHRE BETROFFENEN PERSONENBEZOGENEN DATEN NICHT MEHR VERARBEITEN, ES SEI DENN, WIR KÖNNEN ZWINGENDE SCHUTZWÜRDIGE GRÜNDE FÜR DIE VERARBEITUNG NACHWEISEN, DIE IHRE INTERESSEN, RECHTE UND FREIHEITEN ÜBERWIEGEN ODER DIE VERARBEITUNG DIENT DER GELTENDMACHUNG, AUSÜBUNG ODER VERTEIDIGUNG VON RECHTSANSPRÜCHEN (WIDERSPRUCH NACH ART. 21 ABS. 1 DSGVO).</p>
+                    <p>WERDEN IHRE PERSONENBEZOGENEN DATEN VERARBEITET, UM DIREKTWERBUNG ZU BETREIBEN, SO HABEN SIE DAS RECHT, JEDERZEIT WIDERSPRUCH GEGEN DIE VERARBEITUNG SIE BETREFFENDER PERSONENBEZOGENENER DATEN ZUM ZWECKE DERARTIGER WERBUNG EINZULEGEN; DIES GILT AUCH FÜR DAS PROFILING, SOWEIT ES MIT SOLCHER DIREKTWERBUNG IN VERBINDUNG STEHT. WENN SIE WIDERSPRECHEN, WERDEN IHRE PERSONENBEZOGENEN DATEN ANSCHLIESSEND NICHT MEHR ZUM ZWECKE DER DIREKTWERBUNG VERWENDET (WIDERSPRUCH NACH ART. 21 ABS. 2 DSGVO).</p>
+                    <h3>Beschwerderecht bei der zuständigen Aufsichtsbehörde</h3>
+                    <p>Im Falle von Verstößen gegen die DSGVO steht den Betroffenen ein Beschwerderecht bei einer Aufsichtsbehörde, insbesondere in dem Mitgliedstaat ihres gewöhnlichen Aufenthalts, ihres Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes zu. Das Beschwerderecht besteht unbeschadet anderweitiger verwaltungsrechtlicher oder gerichtlicher Rechtsbehelfe.</p>
+                    <h3>Recht auf Datenübertragbarkeit</h3>
+                    <p>Sie haben das Recht, Daten, die wir auf Grundlage Ihrer Einwilligung oder in Erfüllung eines Vertrags automatisiert verarbeiten, an sich oder an einen Dritten in einem gängigen, maschinenlesbaren Format aushändigen zu lassen. Sofern Sie die direkte Übertragung der Daten an einen anderen Verantwortlichen verlangen, erfolgt dies nur, soweit es technisch machbar ist.</p>
+                    <h3>Auskunft, Berichtigung und Löschung</h3>
+                    <p>Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten können Sie sich jederzeit an uns wenden.</p>
+                    <h3>Recht auf Einschränkung der Verarbeitung</h3>
+                    <p>Sie haben das Recht, die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen. Hierzu können Sie sich jederzeit an uns wenden. Das Recht auf Einschränkung der Verarbeitung besteht in folgenden Fällen:</p>
+                    <ul>
+                        <li>Wenn Sie die Richtigkeit Ihrer bei uns gespeicherten personenbezogenen Daten bestreiten, benötigen wir in der Regel Zeit, um dies zu überprüfen. Für die Dauer der Prüfung haben Sie das Recht, die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen.</li>
+                        <li>Wenn die Verarbeitung Ihrer personenbezogenen Daten unrechtmäßig geschah/geschieht, können Sie statt der Löschung die Einschränkung der Datenverarbeitung verlangen.</li>
+                        <li>Wenn wir Ihre personenbezogenen Daten nicht mehr benötigen, Sie sie jedoch zur Ausübung, Verteidigung oder Geltendmachung von Rechtsansprüchen benötigen, haben Sie das Recht, statt der Löschung die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen.</li>
+                        <li>Wenn Sie einen Widerspruch nach Art. 21 Abs. 1 DSGVO eingelegt haben, muss eine Abwägung zwischen Ihren und unseren Interessen vorgenommen werden. Solange noch nicht feststeht, wessen Interessen überwiegen, haben Sie das Recht, die Einschränkung der Verarbeitung Ihrer personenbezogenen Daten zu verlangen.</li>
+                    </ul>
+                    <p>Wenn Sie die Verarbeitung Ihrer personenbezogenen Daten eingeschränkt haben, dürfen diese Daten – von ihrer Speicherung abgesehen – nur mit Ihrer Einwilligung oder zur Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen oder zum Schutz der Rechte einer anderen natürlichen oder juristischen Person oder aus Gründen eines wichtigen öffentlichen Interesses der Europäischen Union oder eines Mitgliedstaats verarbeitet werden.</p>
+                    <h2>4. Datenerfassung auf dieser Website</h2>
+                    <h3>Anfrage per E-Mail, Telefon oder Telefax</h3>
+                    <p>Wenn Sie uns per E-Mail, Telefon oder Telefax kontaktieren, wird Ihre Anfrage inklusive aller daraus hervorgehenden personenbezogenen Daten (Name, Anfrage) zum Zwecke der Bearbeitung Ihres Anliegens bei uns gespeichert und verarbeitet. Diese Daten geben wir nicht ohne Ihre Einwilligung weiter.</p>
+                    <p>Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO) oder auf Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) sofern diese abgefragt wurde; die Einwilligung ist jederzeit widerrufbar.</p>
+                    <p>Die von Ihnen an uns per Kontaktanfragen übersandten Daten verbleiben bei uns, bis Sie uns zur Löschung auffordern, Ihre Einwilligung zur Speicherung widerrufen oder der Zweck für die Datenspeicherung entfällt (z. B. nach abgeschlossener Bearbeitung Ihres Anliegens). Zwingende gesetzliche Bestimmungen – insbesondere gesetzliche Aufbewahrungsfristen – bleiben unberührt.</p>
+                    <p>Quelle: <a href="https://www.e-recht24.de">https://www.e-recht24.de</a></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h4><span class="logo-highlight">P</span>ixel<span class="logo-highlight">C</span>raft<span class="logo-highlight">L</span>ab</h4>
+                    <p data-key="footerAbout">Your local digital specialist in Ludwigsburg. I bring ideas to life with code and creativity, delivering next-level web experiences.</p>
+                </div>
+                <div class="footer-column">
+                    <h4 data-key="footerContact">Kontakt</h4>
+                    <ul class="contact-info">
+                        <li><p><i class="fa-solid fa-location-dot"></i>71638 Ludwigsburg</p></li>
+                        <li><a href="tel:017676661597"><i class="fa-solid fa-phone"></i>017676661597</a></li>
+                        <li><a href="mailto:info.pixelcraftlab@gmail.com"><i class="fa-solid fa-envelope"></i>info.pixelcraftlab@gmail.com</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4 data-key="footerNav">Navigation</h4>
+                    <ul>
+                        <li><a href="#home" data-key="footerNavHome">Home</a></li>
+                        <li><a href="#services" data-key="footerNavServices">Services</a></li>
+                        <li><a href="#process" data-key="footerNavProcess">My Process</a></li>
+                        <li><a href="#portfolio" data-key="footerNavPortfolio">Portfolio</a></li>
+                        <li><a href="#contact" data-key="footerNavContact">Contact</a></li>
+                    </ul>
+                </div>
+                 <div class="footer-column">
+                    <h4 data-key="footerLegal">Rechtliches</h4>
+                    <ul>
+                        <li><a href="#impressum" data-key="footerLegalImprint">Impressum</a></li>
+                        <li><a href="#datenschutz" data-key="footerLegalPrivacy">Datenschutz</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-key="footerCopyright">&copy; 2025 PixelCraftLab. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const header = document.querySelector('header');
+            const scrollProgress = document.querySelector('.scroll-progress');
+            const menuToggle = document.querySelector('.menu-toggle');
+            const navWrapper = document.querySelector('.nav-wrapper');
+            
+            const allNavLinks = document.querySelectorAll('a[href^="#"]');
+            const pageSections = document.querySelectorAll('main > section');
+
+            // --- BILINGUAL LOGIC ---
+
+            const translations = {
+                en: {
+                    navHome: "Home",
+                    navServices: "Services",
+                    navProcess: "My Process",
+                    navPortfolio: "Portfolio",
+                    navContact: "Contact",
+                    heroTitle: '<h1><span class="floating-word">Build.</span> <span class="floating-word">Innovate.</span> <span class="floating-word">Inspire.</span></h1>',
+                    heroTagline: "Welcome to PixelCraftLab",
+                    heroSubtitle: "I craft cutting-edge digital experiences that elevate your brand and engage your audience. Welcome to the next level of web development.",
+                    heroCtaPrimary: 'My Services <i class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i>',
+                    heroCtaSecondary: "Get in Touch",
+                    homeAboutTitle: "From Vision to Reality, Digitally Crafted.",
+                    homeAboutText: "I am the creative force behind PixelCraftLab, based in Ludwigsburg. I believe in the power of technology to solve problems, connect people, and grow businesses. My approach combines creative design with robust engineering to build web solutions that are not only beautiful but also powerful and reliable.",
+                    viewOurWork: "View My Work",
+                    featureSecurityTitle: "Security: SSL Certificates",
+                    featureSecurityText: "Every website is equipped with an SSL certificate. This encrypts data, protects visitor information, and builds trust.",
+                    featureAnalyticsTitle: "Measure Success: Website Analytics",
+                    featureAnalyticsText: "I set up analytics tools so you can understand who your visitors are and what content resonates best, to continuously improve your site.",
+                    homeGatewayServicesTitle: "My Services",
+                    homeGatewayServicesText: "Explore my comprehensive range of services, from UI/UX design to full-stack development and cloud solutions.",
+                    homeGatewayProcessTitle: "My Process",
+                    homeGatewayProcessText: "Discover my step-by-step process that ensures quality, transparency, and success for every project I undertake.",
+                    homeGatewayPortfolioTitle: "My Portfolio",
+                    homeGatewayPortfolioText: "See my work in action. Browse a selection of my recent projects and see how I've helped clients achieve their goals.",
+                    learnMore: "Learn More",
+                    trustedBy: "Trusted By Industry Leaders",
+                    statProjects: "Projects Completed",
+                    statClients: "Happy Clients",
+                    statCode: "Lines of Code",
+                    statExperience: "Years of Experience",
+                    servicesTitle: "My Services",
+                    service1Title: "UI/UX Design",
+                    service1Desc: "Creating intuitive, beautiful, and user-centric designs that provide a seamless digital experience and drive engagement.",
+                    service2Title: "Web Development",
+                    service2Desc: "Building robust, scalable, and high-performance websites and applications using the latest technologies and frameworks.",
+                    service3Title: "SEO & Performance",
+                    service3Desc: "Optimizing your digital presence for search engines and ensuring lightning-fast load times for a superior user experience.",
+                    service4Title: "Full-Service Management",
+                    service4Desc: "I take the stress and time commitment of creating and maintaining a website off your hands, so you can fully concentrate on your core business.",
+                    service5Title: "Cloud & DevOps",
+                    service5Desc: "Automating deployment and scaling your infrastructure on the cloud for maximum reliability and efficiency.",
+                    service6Title: "Ongoing Support",
+                    service6Desc: "Providing continuous maintenance, updates, and support to ensure your digital assets remain secure and up-to-date.",
+                    processTitle: "My Process",
+                    process1Title: "1. Discovery & Strategy",
+                    process1Desc: "I start by understanding your business goals, target audience, and project requirements to build a solid strategic foundation.",
+                    process2Title: "2. Design & Prototyping",
+                    process2Desc: "I create wireframes and high-fidelity mockups, focusing on user experience and visual design to bring your vision to life.",
+                    process3Title: "3. Development",
+                    process3Desc: "Using clean, efficient code, I build a fast, responsive, and scalable product based on the approved designs.",
+                    process4Title: "4. Deployment & Launch",
+                    process4Desc: "After rigorous testing, I deploy the project to a live server and monitor its performance to ensure a smooth launch.",
+                    portfolioTitle: "My Work",
+                    portfolio1Title: "Corporate Website Redesign",
+                    portfolio1Desc: "A complete overhaul of a major tech company's website, focusing on a modern user experience and performance.",
+                    tagWebDev: "Web Development",
+                    tagUIUX: "UI/UX",
+                    viewProject: "View Project",
+                    contactTitle: "Get in Touch",
+                    formName: "Name",
+                    formEmail: "Email",
+                    formMessage: "Message",
+                    formButton: "Send Message",
+                    formHint: "(You will be redirected to your email client)",
+                    contactInfoTitle: "Contact Information",
+                    contactAddress: "Musterstraße 1<br>71638 Ludwigsburg",
+                    contactHoursTitle: "Business Hours",
+                    contactHours: "Monday - Friday<br>9:00 AM - 5:00 PM",
+                    mapArea: "Map Area",
+                    footerAbout: "Your local digital specialist in Ludwigsburg. I bring ideas to life with code and creativity, delivering next-level web experiences.",
+                    footerContact: "Contact",
+                    footerNav: "Navigation",
+                    footerNavHome: "Home",
+                    footerNavServices: "Services",
+                    footerNavProcess: "My Process",
+                    footerNavPortfolio: "Portfolio",
+                    footerNavContact: "Contact",
+                    footerLegal: "Legal",
+                    footerLegalImprint: "Imprint",
+                    footerLegalPrivacy: "Privacy Policy",
+                    footerLegalTerms: "Terms & Conditions",
+                    footerLegalCookies: "Cookie Policy",
+                    footerCopyright: "&copy; 2025 PixelCraftLab. All rights reserved."
+                },
+                de: {
+                    navHome: "Startseite",
+                    navServices: "Leistungen",
+                    navProcess: "Mein Prozess",
+                    navPortfolio: "Portfolio",
+                    navContact: "Kontakt",
+                    heroTitle: '<h1><span class="floating-word">Bauen.</span> <span class="floating-word">Erneuern.</span> <span class="floating-word">Inspirieren.</span></h1>',
+                    heroTagline: "Willkommen bei PixelCraftLab",
+                    heroSubtitle: "Ich schaffe hochmoderne digitale Erlebnisse, die Ihre Marke hervorheben und Ihr Publikum ansprechen. Willkommen auf der nächsten Stufe der Webentwicklung.",
+                    heroCtaPrimary: 'Meine Leistungen <i class="fa-solid fa-arrow-right" style="margin-left: 0.5rem;"></i>',
+                    heroCtaSecondary: "Kontakt aufnehmen",
+                    homeAboutTitle: "Von der Vision zur Realität, digital umgesetzt.",
+                    homeAboutText: "Von der Vision zur Realität – in Ihrem Tempo. PixelCraftLab aus Ludwigsburg ist Ihr Partner für professionelle Webentwicklung. Ich verstehe, dass jedes Projekt einzigartig ist. Benötigen Sie eine schnelle und schlagkräftige Online-Präsenz? Ihre neue Webseite kann in nur 72 Stunden online sein. Für komplexere Vorhaben biete ich einen detaillierten, kollaborativen Prozess, bei dem wir gemeinsam jeden Schritt gestalten. Egal welchen Weg Sie wählen, ich kombiniere modernes Design mit robuster Technik für eine leistungsstarke und zuverlässige Web-Lösung.",
+                    viewOurWork: "Meine Arbeit ansehen",
+                    featureSecurityTitle: "Sicherheit: SSL-Zertifikate",
+                    featureSecurityText: "Jede Webseite wird mit einem SSL-Zertifikat ausgestattet. Das verschlüsselt die Daten, schützt Besucherinformationen und schafft Vertrauen.",
+                    featureAnalyticsTitle: "Erfolg messen: Website Analytics",
+                    featureAnalyticsText: "Ich richte Analyse-Tools ein, damit Sie verstehen, wer Ihre Besucher sind und welche Inhalte am besten ankommen, um Ihre Seite stetig zu verbessern.",
+                    homeGatewayServicesTitle: "Meine Leistungen",
+                    homeGatewayServicesText: "Entdecken Sie mein umfassendes Leistungsangebot, von UI/UX-Design über Full-Stack-Entwicklung bis hin zu Cloud-Lösungen.",
+                    homeGatewayProcessTitle: "Mein Prozess",
+                    homeGatewayProcessText: "Entdecken Sie meinen schrittweisen Prozess, der Qualität, Transparenz und Erfolg für jedes von mir durchgeführte Projekt gewährleistet.",
+                    homeGatewayPortfolioTitle: "Mein Portfolio",
+                    homeGatewayPortfolioText: "Sehen Sie meine Arbeit in Aktion. Durchsuchen Sie eine Auswahl meiner jüngsten Projekte und sehen Sie, wie ich Kunden geholfen habe, ihre Ziele zu erreichen.",
+                    learnMore: "Mehr erfahren",
+                    trustedBy: "Vertraut von Branchenführern",
+                    statProjects: "Projekte abgeschlossen",
+                    statClients: "Zufriedene Kunden",
+                    statCode: "Zeilen Code",
+                    statExperience: "Jahre Erfahrung",
+                    servicesTitle: "Meine Leistungen",
+                    service1Title: "UI/UX-Design",
+                    service1Desc: "Erstellung intuitiver, schöner und benutzerzentrierter Designs, die ein nahtloses digitales Erlebnis bieten und die Interaktion fördern.",
+                    service2Title: "Web-Entwicklung",
+                    service2Desc: "Erstellung robuster, skalierbarer und leistungsstarker Websites und Anwendungen mit den neuesten Technologien und Frameworks.",
+                    service3Title: "SEO & Leistung",
+                    service3Desc: "Optimierung Ihrer digitalen Präsenz für Suchmaschinen und Gewährleistung blitzschneller Ladezeiten für ein überlegenes Benutzererlebnis.",
+                    service4Title: "Full-Service-Betreuung",
+                    service4Desc: "Ich nehme Ihnen den Stress und den Zeitaufwand ab, der mit der Erstellung und Pflege einer Website verbunden ist, damit Sie sich voll auf Ihr Kerngeschäft konzentrieren können.",
+                    service5Title: "Cloud & DevOps",
+                    service5Desc: "Automatisierung der Bereitstellung und Skalierung Ihrer Infrastruktur in der Cloud für maximale Zuverlässigkeit und Effizienz.",
+                    service6Title: "Laufender Support",
+                    service6Desc: "Bereitstellung kontinuierlicher Wartung, Updates und Support, um sicherzustellen, dass Ihre digitalen Ressourcen sicher und aktuell bleiben.",
+                    processTitle: "Mein Prozess",
+                    process1Title: "1. Entdeckung & Strategie",
+                    process1Desc: "Ich beginne damit, Ihre Geschäftsziele, Zielgruppe und Projektanforderungen zu verstehen, um eine solide strategische Grundlage zu schaffen.",
+                    process2Title: "2. Design & Prototyping",
+                    process2Desc: "Ich erstelle Wireframes und High-Fidelity-Mockups, die sich auf Benutzererlebnis und visuelles Design konzentrieren, um Ihre Vision zum Leben zu erwecken.",
+                    process3Title: "3. Entwicklung",
+                    process3Desc: "Mit sauberem, effizientem Code erstelle ich ein schnelles, responsives und skalierbares Produkt auf der Grundlage der genehmigten Designs.",
+                    process4Title: "4. Bereitstellung & Start",
+                    process4Desc: "Nach rigorosen Tests stelle ich das Projekt auf einem Live-Server bereit und überwache seine Leistung, um einen reibungslosen Start zu gewährleisten.",
+                    portfolioTitle: "Meine Arbeit",
+                    portfolio1Title: "Neugestaltung einer Unternehmenswebsite",
+                    portfolio1Desc: "Eine komplette Überarbeitung der Website eines großen Technologieunternehmens mit Fokus auf ein modernes Benutzererlebnis und Leistung.",
+                    tagWebDev: "Web-Entwicklung",
+                    tagUIUX: "UI/UX",
+                    viewProject: "Projekt ansehen",
+                    contactTitle: "Kontakt aufnehmen",
+                    formName: "Name",
+                    formEmail: "E-Mail",
+                    formMessage: "Nachricht",
+                    formButton: "Nachricht senden",
+                    formHint: "(Sie werden zu Ihrem E-Mail-Programm weitergeleitet)",
+                    contactInfoTitle: "Kontaktinformationen",
+                    contactAddress: "Musterstraße 1<br>71638 Ludwigsburg",
+                    contactHoursTitle: "Öffnungszeiten",
+                    contactHours: "Montag - Freitag<br>09:00 - 17:00 Uhr",
+                    mapArea: "Kartenbereich",
+                    footerAbout: "Ihr lokaler Digitalspezialist in Ludwigsburg. Ich erwecke Ideen mit Code und Kreativität zum Leben und liefere Web-Erlebnisse der nächsten Generation.",
+                    footerContact: "Kontakt",
+                    footerNav: "Navigation",
+                    footerNavHome: "Startseite",
+                    footerNavServices: "Leistungen",
+                    footerNavProcess: "Mein Prozess",
+                    footerNavPortfolio: "Portfolio",
+                    footerNavContact: "Kontakt",
+                    footerLegal: "Rechtliches",
+                    footerLegalImprint: "Impressum",
+                    footerLegalPrivacy: "Datenschutz",
+                    footerLegalTerms: "AGB",
+                    footerLegalCookies: "Cookie-Richtlinie",
+                    footerCopyright: "&copy; 2025 PixelCraftLab. Alle Rechte vorbehalten."
+                }
+            };
+
+            const langButtons = document.querySelectorAll('.lang-btn');
+            const translatableElements = document.querySelectorAll('[data-key]');
+
+            function setLanguage(lang) {
+                translatableElements.forEach(el => {
+                    const key = el.dataset.key;
+                    if (translations[lang][key]) {
+                        el.innerHTML = translations[lang][key];
+                    }
+                });
+                document.documentElement.lang = lang;
+                localStorage.setItem('language', lang);
+
+                langButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+            }
+
+            langButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setLanguage(btn.dataset.lang);
+                });
+            });
+
+            function showPage(pageId, isInitialLoad = false) {
+                pageSections.forEach(section => {
+                    section.classList.remove('active');
+                    // section.style.display = 'none'; // Keep this commented out or remove to rely on CSS
+                });
+
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                    // targetPage.style.display = 'block'; // Keep this commented out or remove to rely on CSS
+                } else {
+                    const homePage = document.getElementById('home');
+                    homePage.classList.add('active');
+                    // homePage.style.display = 'block'; // Keep this commented out or remove to rely on CSS
+                }
+
+                document.querySelectorAll('.nav-links a, .footer-column a').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${pageId}`) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                if (!isInitialLoad) {
+                    window.scrollTo(0, 0);
+                }
+
+                if (pageId === 'home') {
+                    animateStats();
+                }
+            }
+
+            allNavLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const href = link.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        e.preventDefault();
+                        const pageId = href.substring(1);
+                        
+                        history.pushState({page: pageId}, null, href); 
+                        showPage(pageId);
+                        
+                        if (navWrapper.classList.contains('active')) {
+                            navWrapper.classList.remove('active');
+                        }
+                    }
+                });
+            });
+
+            const initialPageId = window.location.hash ? window.location.hash.substring(1) : 'home';
+            showPage(initialPageId, true);
+            
+            const savedLang = localStorage.getItem('language') || 'de';
+            setLanguage(savedLang);
+            
+            window.addEventListener('popstate', (e) => {
+                const pageId = e.state && e.state.page ? e.state.page : (window.location.hash ? window.location.hash.substring(1) : 'home');
+                showPage(pageId);
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+
+            window.addEventListener('scroll', () => {
+                const scrollTop = document.documentElement.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrollPercentage = (scrollTop / scrollHeight) * 100;
+                scrollProgress.style.width = `${scrollPercentage}%`;
+            });
+
+            menuToggle.addEventListener('click', () => {
+                navWrapper.classList.toggle('active');
+            });
+            
+            const animatedElements = document.querySelectorAll('.entrance-fade');
+            const entranceObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationPlayState = 'running';
+                        entranceObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            animatedElements.forEach(el => {
+                entranceObserver.observe(el);
+            });
+
+            function animateStats() {
+                const statNumbers = document.querySelectorAll('.stat-number');
+                statNumbers.forEach(stat => {
+                    if (stat.dataset.animated) return;
+                    stat.dataset.animated = true;
+
+                    const target = +stat.dataset.target;
+                    let count = 0;
+                    const duration = 2000;
+                    const increment = target / (duration / 16);
+
+                    const updateCount = () => {
+                        count += increment;
+                        if (count < target) {
+                            stat.innerText = Math.ceil(count).toLocaleString();
+                            requestAnimationFrame(updateCount);
+                        } else {
+                            stat.innerText = target.toLocaleString();
+                        }
+                    };
+                    updateCount();
+                });
+            }
+
+            // --- THREE.JS HERO ANIMATION ---
+            
+            // Background particles
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('hero-canvas'), alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            const particlesGeometry = new THREE.BufferGeometry;
+            const particlesCnt = 5000;
+            const posArray = new Float32Array(particlesCnt * 3);
+            for(let i = 0; i < particlesCnt * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 5;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.005, color: 0x2563eb });
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            camera.position.z = 2;
+
+            // Animated shape
+            const shapeScene = new THREE.Scene();
+            const shapeCanvas = document.getElementById('shape-canvas');
+            if (shapeCanvas) {
+                const shapeCamera = new THREE.PerspectiveCamera(75, shapeCanvas.clientWidth / shapeCanvas.clientHeight, 0.1, 1000);
+                const shapeRenderer = new THREE.WebGLRenderer({ canvas: shapeCanvas, alpha: true });
+                shapeRenderer.setSize(shapeCanvas.clientWidth, shapeCanvas.clientHeight);
+
+                const geometry = new THREE.IcosahedronGeometry(1, 0);
+                const material = new THREE.MeshStandardMaterial({ color: 0x2563eb, wireframe: true });
+                const shape = new THREE.Mesh(geometry, material);
+                shapeScene.add(shape);
+                shapeCamera.position.z = 2;
+                
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(2, 2, 5);
+                shapeScene.add(light);
+
+                function animateShape() {
+                    requestAnimationFrame(animateShape);
+                    shape.rotation.x += 0.005;
+                    shape.rotation.y += 0.005;
+                    shapeRenderer.render(shapeScene, shapeCamera);
+                }
+                animateShape();
+
+                 window.addEventListener('resize', () => {
+                    if(shapeCanvas) {
+                        shapeCamera.aspect = shapeCanvas.clientWidth / shapeCanvas.clientHeight;
+                        shapeCamera.updateProjectionMatrix();
+                        shapeRenderer.setSize(shapeCanvas.clientWidth, shapeCanvas.clientHeight);
+                    }
+                });
+            }
+
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particlesMesh.rotation.y += 0.0005;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+        });
+    </script>
+</body>
+</html>
